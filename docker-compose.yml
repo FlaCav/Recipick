@@ -12,7 +12,13 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data  # Docker-managed volume
+    deploy:
+      resources:
+        limits:
+          memory: 1GB  # Limit PostgreSQL to 1GB RAM
+          cpus: "1.0"  # Restrict PostgreSQL to 1 CPU core
 
 volumes:
   pgdata:
+    driver: local  # Default Docker volume driver
