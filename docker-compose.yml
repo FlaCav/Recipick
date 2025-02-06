@@ -16,8 +16,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1GB  # Limit PostgreSQL to 1GB RAM
-          cpus: "1.0"  # Restrict PostgreSQL to 1 CPU core
+          memory: 3GB  # Limit PostgreSQL to 3GB RAM
+          cpus: "3.0"  # Restrict PostgreSQL to 3 CPU core
 
 volumes:
   pgdata:
