@@ -4,7 +4,7 @@ from urllib.parse import urljoin
 import re
 
 # Base URL for pasta recipes
-CATEGORY_URL = "https://www.giallozafferano.com/recipes-search/pasta/"
+CATEGORY_URL = "https://www.giallozafferano.com/recipes-search/pasta/" #/page1, /page2, etc
 
 def get_recipe_links():
     """Fetch and return a list of unique recipe URLs from the category page."""

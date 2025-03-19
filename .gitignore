@@ -1,2 +1,3 @@
 /get-data/venv
 /get-data/venv/*
+/__pycache__/

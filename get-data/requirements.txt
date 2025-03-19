@@ -1,3 +1,9 @@
 requests
 beautifulsoup4
 psycopg2
+fastapi[all]
+psycopg2-binary 
+sqlalchemy 
+asyncpg 
+uvicorn
+
