@@ -6,4 +6,5 @@ psycopg2-binary
 sqlalchemy 
 asyncpg 
 uvicorn
+fastapi-cors
 

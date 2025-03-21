@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware  
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import select, Column, Integer, String, Text, text, create_engine
@@ -17,6 +18,15 @@ SessionLocal = sessionmaker(autocommit = False, autoflush = False, bind = engine
 
 # FastAPI App
 app = FastAPI(title="Recipe API", description="An API for searching pasta recipes")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 # Dependency to get DB session
 def get_db():
@@ -53,7 +63,7 @@ class RecipeResponse(BaseModel):
     class Config:
         orm_mode = True
 
-# ✅ API Endpoints
+# API Endpoints
 
 @app.get("/")
 def root():
