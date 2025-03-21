@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const recipesContainer = document.getElementById('recipes-container');
     const loadingIndicator = document.getElementById('loading');
     const pastaTypesContainer = document.getElementById('pasta-types-container');
+    const homeButton = document.getElementById('homeButton');
     
     // API URLs - Update these with your actual API URLs
     const baseApiUrl = 'http://127.0.0.1:8000';
@@ -18,8 +19,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load pasta types when page loads
     loadPastaTypes();
     
+    // Initialize the page to home state
+    resetToHome();
+    
     // Event Listeners
     fetchRecipesButton.addEventListener('click', () => {
+        hidePastaTypes();
         fetchRecipes();
     });
     
@@ -38,6 +43,17 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+    
+    homeButton.addEventListener('click', () => {
+        resetToHome();
+    });
+    
+    // Function to reset to home state
+    function resetToHome() {
+        showPastaTypes();
+        clearRecipesContainer();
+        ingredientInput.value = '';
+    }
     
     // Function to fetch and display all recipes
     async function fetchRecipes() {
@@ -67,6 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function searchByIngredient(ingredient) {
         showLoading();
         clearRecipesContainer();
+        hidePastaTypes(); // Hide pasta types for ingredient search too
         
         try {
             const response = await fetch(`${searchUrl}?ingredient=${encodeURIComponent(ingredient)}`);
@@ -89,6 +106,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Function to search by pasta type
     async function searchByPastaType(pastaType) {
+        // Hide pasta types immediately before any async operations
+        hidePastaTypes();
+        
         showLoading();
         clearRecipesContainer();
         
@@ -163,6 +183,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
+    // Function to hide pasta types - Direct style approach
+    function hidePastaTypes() {
+        pastaTypesContainer.style.display = 'none';
+    }
+    
+    // Function to show pasta types - Direct style approach
+    function showPastaTypes() {
+        pastaTypesContainer.style.display = '';
+    }
+    
     // Function to display recipes
     function displayRecipes(recipes, showSearchInfo = false, searchParams = null) {
         if (recipes.length === 0) {
@@ -189,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             searchInfoDiv.innerHTML = `
                 ${infoText}
-                <span class="clear-search" onclick="window.location.reload()">Clear search</span>
+                <span class="clear-search" onclick="window.goToHome()">Clear search</span>
             `;
             
             recipesContainer.appendChild(searchInfoDiv);
@@ -228,6 +258,11 @@ document.addEventListener('DOMContentLoaded', () => {
             recipesContainer.appendChild(recipeCard);
         });
     }
+    
+    // Expose the resetToHome function to the window object for the clear search button
+    window.goToHome = function() {
+        resetToHome();
+    };
     
     // Utility functions
     function showLoading() {
