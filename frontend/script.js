@@ -1,21 +1,120 @@
 document.addEventListener('DOMContentLoaded', () => {
     const fetchRecipesButton = document.getElementById('fetchRecipes');
+    const searchButton = document.getElementById('searchButton');
+    const ingredientInput = document.getElementById('ingredientSearch');
     const recipesContainer = document.getElementById('recipes-container');
     const loadingIndicator = document.getElementById('loading');
+    const pastaTypesContainer = document.getElementById('pasta-types-container');
     
-    // API URL - Update this with your actual API URL
-    const apiUrl = 'http://127.0.0.1:8000/recipes';
+    // API URLs - Update these with your actual API URLs
+    const baseApiUrl = 'http://127.0.0.1:8000';
+    const recipesUrl = `${baseApiUrl}/recipes`;
+    const searchUrl = `${baseApiUrl}/search`;
+    const pastaTypeSearchUrl = `${baseApiUrl}/search/`;
     
-    fetchRecipesButton.addEventListener('click', async () => {
-        // Show loading indicator
-        loadingIndicator.classList.remove('hidden');
-        
-        // Clear previous recipes
-        recipesContainer.innerHTML = '';
+    // Set page title
+    let currentPageTitle = 'All Recipes';
+    
+    // Load pasta types when page loads
+    loadPastaTypes();
+    
+    // Event Listeners
+    fetchRecipesButton.addEventListener('click', () => {
+        fetchRecipes();
+    });
+    
+    searchButton.addEventListener('click', () => {
+        const ingredient = ingredientInput.value.trim();
+        if (ingredient) {
+            searchByIngredient(ingredient);
+        }
+    });
+    
+    ingredientInput.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+            const ingredient = ingredientInput.value.trim();
+            if (ingredient) {
+                searchByIngredient(ingredient);
+            }
+        }
+    });
+    
+    // Function to fetch and display all recipes
+    async function fetchRecipes() {
+        showLoading();
+        clearRecipesContainer();
         
         try {
-            // Fetch recipes from API
-            const response = await fetch(apiUrl);
+            const response = await fetch(recipesUrl);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            
+            const recipes = await response.json();
+            hideLoading();
+            
+            currentPageTitle = 'All Recipes';
+            displayRecipes(recipes);
+        } catch (error) {
+            console.error('Error fetching recipes:', error);
+            hideLoading();
+            showError('Failed to fetch recipes. Please try again later.');
+        }
+    }
+    
+    // Function to search by ingredient
+    async function searchByIngredient(ingredient) {
+        showLoading();
+        clearRecipesContainer();
+        
+        try {
+            const response = await fetch(`${searchUrl}?ingredient=${encodeURIComponent(ingredient)}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            
+            const recipes = await response.json();
+            hideLoading();
+            
+            currentPageTitle = `Search results for "${ingredient}"`;
+            displayRecipes(recipes, true, { type: 'ingredient', value: ingredient });
+        } catch (error) {
+            console.error('Error searching recipes:', error);
+            hideLoading();
+            showError('Failed to search recipes. Please try again later.');
+        }
+    }
+    
+    // Function to search by pasta type
+    async function searchByPastaType(pastaType) {
+        showLoading();
+        clearRecipesContainer();
+        
+        try {
+            const response = await fetch(`${pastaTypeSearchUrl}${encodeURIComponent(pastaType)}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            
+            const recipes = await response.json();
+            hideLoading();
+            
+            currentPageTitle = `Recipes with ${pastaType}`;
+            displayRecipes(recipes, true, { type: 'pastaType', value: pastaType });
+        } catch (error) {
+            console.error('Error searching recipes by pasta type:', error);
+            hideLoading();
+            showError('Failed to fetch pasta recipes. Please try again later.');
+        }
+    }
+    
+    // Function to load unique pasta types
+    async function loadPastaTypes() {
+        try {
+            const response = await fetch(recipesUrl);
             
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
@@ -23,27 +122,49 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const recipes = await response.json();
             
-            // Hide loading indicator
-            loadingIndicator.classList.add('hidden');
+            // Extract unique pasta types
+            const pastaTypes = [...new Set(recipes.map(recipe => recipe.pasta_type))];
             
-            // Display recipes
-            displayRecipes(recipes);
+            // Display pasta type tiles
+            displayPastaTypes(pastaTypes);
         } catch (error) {
-            console.error('Error fetching recipes:', error);
-            
-            // Hide loading indicator
-            loadingIndicator.classList.add('hidden');
-            
-            // Show error message
-            recipesContainer.innerHTML = `
-                <div style="text-align: center; color: #e53e3e; grid-column: 1 / -1;">
-                    <p>Failed to fetch recipes. Please try again later.</p>
+            console.error('Error loading pasta types:', error);
+            pastaTypesContainer.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; color: #e53e3e;">
+                    <p>Failed to load pasta types. Please refresh the page.</p>
                 </div>
             `;
         }
-    });
+    }
     
-    function displayRecipes(recipes) {
+    // Function to display pasta types as tiles
+    function displayPastaTypes(pastaTypes) {
+        pastaTypesContainer.innerHTML = '';
+        
+        if (pastaTypes.length === 0) {
+            pastaTypesContainer.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center;">
+                    <p>No pasta types available.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        pastaTypes.forEach(pastaType => {
+            const tile = document.createElement('div');
+            tile.className = 'pasta-type-tile';
+            tile.innerHTML = `<span class="pasta-type-name">${pastaType}</span>`;
+            
+            tile.addEventListener('click', () => {
+                searchByPastaType(pastaType);
+            });
+            
+            pastaTypesContainer.appendChild(tile);
+        });
+    }
+    
+    // Function to display recipes
+    function displayRecipes(recipes, showSearchInfo = false, searchParams = null) {
         if (recipes.length === 0) {
             recipesContainer.innerHTML = `
                 <div style="text-align: center; grid-column: 1 / -1;">
@@ -51,6 +172,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
             return;
+        }
+        
+        // Add search result info if needed
+        if (showSearchInfo && searchParams) {
+            const searchInfoDiv = document.createElement('div');
+            searchInfoDiv.className = 'search-result-info';
+            searchInfoDiv.style.gridColumn = '1 / -1';
+            
+            let infoText = '';
+            if (searchParams.type === 'ingredient') {
+                infoText = `Showing recipes with "${searchParams.value}"`;
+            } else if (searchParams.type === 'pastaType') {
+                infoText = `Showing ${searchParams.value} recipes`;
+            }
+            
+            searchInfoDiv.innerHTML = `
+                ${infoText}
+                <span class="clear-search" onclick="window.location.reload()">Clear search</span>
+            `;
+            
+            recipesContainer.appendChild(searchInfoDiv);
         }
         
         recipes.forEach(recipe => {
@@ -85,5 +227,26 @@ document.addEventListener('DOMContentLoaded', () => {
             
             recipesContainer.appendChild(recipeCard);
         });
+    }
+    
+    // Utility functions
+    function showLoading() {
+        loadingIndicator.classList.remove('hidden');
+    }
+    
+    function hideLoading() {
+        loadingIndicator.classList.add('hidden');
+    }
+    
+    function clearRecipesContainer() {
+        recipesContainer.innerHTML = '';
+    }
+    
+    function showError(message) {
+        recipesContainer.innerHTML = `
+            <div style="text-align: center; color: #e53e3e; grid-column: 1 / -1;">
+                <p>${message}</p>
+            </div>
+        `;
     }
 });

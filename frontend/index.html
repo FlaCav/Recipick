@@ -14,8 +14,17 @@
             <p class="subtitle">Discover delicious pasta recipes</p>
         </header>
 
-        <div class="search-container">
-            <button id="fetchRecipes" class="btn">Show All Recipes</button>
+        <div class="actions-container">
+            <div class="search-container">
+                <input type="text" id="ingredientSearch" placeholder="Search by ingredient..." class="search-input">
+                <button id="searchButton" class="btn">Search</button>
+            </div>
+            <button id="fetchRecipes" class="btn btn-secondary">Show All Recipes</button>
+        </div>
+
+        <div id="pasta-types-container" class="pasta-types-grid">
+            <!-- Pasta type tiles will be dynamically inserted here -->
+            <div class="loading-small">Loading pasta types...</div>
         </div>
 
         <div id="loading" class="loading hidden">
